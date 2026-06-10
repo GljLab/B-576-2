@@ -65,6 +65,42 @@ const routes = [
         name: 'Results',
         component: () => import('@/views/Results.vue'),
         meta: { title: '成绩查询', icon: 'Document' }
+      },
+      {
+        path: 'scheduling',
+        name: 'Scheduling',
+        component: () => import('@/views/scheduling/SchedulingHome.vue'),
+        meta: { title: '智能调度', icon: 'Calendar' }
+      },
+      {
+        path: 'scheduling/:projectId/sessions',
+        name: 'SessionConfig',
+        component: () => import('@/views/scheduling/SessionConfig.vue'),
+        meta: { title: '场次配置', hidden: true }
+      },
+      {
+        path: 'scheduling/:projectId/availability',
+        name: 'ExaminerAvailability',
+        component: () => import('@/views/scheduling/ExaminerAvailability.vue'),
+        meta: { title: '考官可用性', hidden: true }
+      },
+      {
+        path: 'scheduling/:projectId/plan',
+        name: 'SchedulingPlan',
+        component: () => import('@/views/scheduling/SchedulingPlan.vue'),
+        meta: { title: '调度方案', hidden: true }
+      },
+      {
+        path: 'scheduling/:projectId/adjustment',
+        name: 'ScheduleAdjustment',
+        component: () => import('@/views/scheduling/ScheduleAdjustment.vue'),
+        meta: { title: '动态调整', hidden: true }
+      },
+      {
+        path: 'scheduling/:projectId/dashboard',
+        name: 'ScheduleDashboard',
+        component: () => import('@/views/scheduling/ScheduleDashboard.vue'),
+        meta: { title: '调度仪表盘', hidden: true }
       }
     ]
   },

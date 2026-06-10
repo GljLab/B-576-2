@@ -46,10 +46,13 @@
           </el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="操作" width="200" fixed="right">
+      <el-table-column label="操作" width="280" fixed="right">
         <template #default="{ row }">
           <el-button type="primary" link @click="$router.push(`/projects/${row.id}`)">
             详情
+          </el-button>
+          <el-button type="success" link @click="$router.push(`/scheduling/${row.id}/sessions`)">
+            场次编排
           </el-button>
           <el-button type="primary" link @click="showDialog(row)">
             编辑

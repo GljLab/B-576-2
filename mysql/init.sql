@@ -441,4 +441,156 @@ INSERT INTO sys_config (config_key, config_value, config_type, description) VALU
 ('system_name', '智慧面试评分系统', 'SYSTEM', '系统名称'),
 ('system_version', 'V1.0.0', 'SYSTEM', '系统版本');
 
+-- =============================================
+-- 15. 面试场次表
+-- =============================================
+DROP TABLE IF EXISTS interview_session;
+CREATE TABLE interview_session (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '场次ID',
+    project_id BIGINT NOT NULL COMMENT '所属项目ID',
+    session_name VARCHAR(100) NOT NULL COMMENT '场次名称（如"第一天上午场"）',
+    session_date DATE NOT NULL COMMENT '场次日期',
+    start_time TIME NOT NULL COMMENT '开始时间',
+    end_time TIME NOT NULL COMMENT '结束时间',
+    break_interval INT DEFAULT 15 COMMENT '场次间隔时间（分钟）',
+    candidate_capacity INT DEFAULT 30 COMMENT '预计容纳考生人数上限',
+    room_ids TEXT COMMENT '可用考场ID列表（逗号分隔）',
+    position_ids TEXT COMMENT '适用职位ID列表（逗号分隔，NULL表示全部）',
+    position_strategy TINYINT DEFAULT 0 COMMENT '职位策略：0-共享场次，1-专属场次',
+    sort_order INT DEFAULT 0 COMMENT '排序',
+    status TINYINT NOT NULL DEFAULT 0 COMMENT '状态：0-待安排，1-已分配，2-进行中，3-已完成，4-已取消',
+    create_user_id BIGINT COMMENT '创建人ID',
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    INDEX idx_project_id (project_id),
+    INDEX idx_session_date (session_date),
+    INDEX idx_status (status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='面试场次表';
+
+-- =============================================
+-- 16. 考官可用性表
+-- =============================================
+DROP TABLE IF EXISTS examiner_availability;
+CREATE TABLE examiner_availability (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '可用性ID',
+    project_id BIGINT NOT NULL COMMENT '所属项目ID',
+    examiner_id BIGINT NOT NULL COMMENT '考官ID',
+    available_date DATE NOT NULL COMMENT '日期',
+    time_slot TINYINT NOT NULL COMMENT '时间段：0-全天可用，1-仅上午，2-仅下午，3-不可用',
+    total_sessions INT DEFAULT 0 COMMENT '历史参与场次数',
+    total_candidates INT DEFAULT 0 COMMENT '历史评分考生数',
+    max_consecutive_sessions INT DEFAULT 3 COMMENT '最大连续场次数',
+    special_constraints TEXT COMMENT '特殊约束（JSON格式，如必须组合的考官ID列表）',
+    remark VARCHAR(500) COMMENT '备注',
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    UNIQUE KEY uk_examiner_date (examiner_id, available_date),
+    INDEX idx_project_id (project_id),
+    INDEX idx_examiner_id (examiner_id),
+    INDEX idx_available_date (available_date)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='考官可用性表';
+
+-- =============================================
+-- 17. 调度方案表
+-- =============================================
+DROP TABLE IF EXISTS scheduling_plan;
+CREATE TABLE scheduling_plan (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '方案ID',
+    project_id BIGINT NOT NULL COMMENT '所属项目ID',
+    plan_name VARCHAR(100) NOT NULL COMMENT '方案名称',
+    plan_version VARCHAR(50) COMMENT '方案版本',
+    scheduling_strategy TINYINT DEFAULT 0 COMMENT '调度策略：0-平衡负荷，1-压缩时间，2-优先职位',
+    total_sessions INT DEFAULT 0 COMMENT '总场次数',
+    total_examiners INT DEFAULT 0 COMMENT '涉及考官数',
+    total_candidates INT DEFAULT 0 COMMENT '涉及考生数',
+    total_rooms INT DEFAULT 0 COMMENT '使用考场数',
+    estimated_duration INT DEFAULT 0 COMMENT '预计总时长（分钟）',
+    workload_balance_score DECIMAL(5,2) DEFAULT 0.00 COMMENT '负荷均衡评分（0-100）',
+    room_utilization_score DECIMAL(5,2) DEFAULT 0.00 COMMENT '考场利用率评分（0-100）',
+    overall_score DECIMAL(5,2) DEFAULT 0.00 COMMENT '综合评分（0-100）',
+    conflict_info TEXT COMMENT '冲突信息（JSON格式）',
+    is_execution TINYINT DEFAULT 0 COMMENT '是否执行方案：0-备选，1-执行方案',
+    status TINYINT NOT NULL DEFAULT 0 COMMENT '状态：0-草稿，1-已确认，2-已执行，3-已废弃',
+    remark VARCHAR(500) COMMENT '备注',
+    create_user_id BIGINT COMMENT '创建人ID',
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    INDEX idx_project_id (project_id),
+    INDEX idx_is_execution (is_execution),
+    INDEX idx_status (status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='调度方案表';
+
+-- =============================================
+-- 18. 场次分配表
+-- =============================================
+DROP TABLE IF EXISTS session_assignment;
+CREATE TABLE session_assignment (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '分配ID',
+    plan_id BIGINT NOT NULL COMMENT '调度方案ID',
+    session_id BIGINT NOT NULL COMMENT '场次ID',
+    room_id BIGINT NOT NULL COMMENT '考场ID',
+    position_id BIGINT COMMENT '职位ID（专属场次时使用）',
+    examiner_ids TEXT NOT NULL COMMENT '考官ID列表（逗号分隔）',
+    chief_examiner_id BIGINT COMMENT '主考官ID',
+    candidate_ids TEXT COMMENT '考生ID列表（逗号分隔，按顺序）',
+    candidate_count INT DEFAULT 0 COMMENT '考生数量',
+    estimated_start_time DATETIME COMMENT '预计开始时间',
+    estimated_end_time DATETIME COMMENT '预计结束时间',
+    actual_start_time DATETIME COMMENT '实际开始时间',
+    actual_end_time DATETIME COMMENT '实际结束时间',
+    sort_order INT DEFAULT 0 COMMENT '同场次内的并行分组序号',
+    status TINYINT NOT NULL DEFAULT 0 COMMENT '状态：0-待开始，1-进行中，2-已完成，3-已取消',
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    INDEX idx_plan_id (plan_id),
+    INDEX idx_session_id (session_id),
+    INDEX idx_room_id (room_id),
+    INDEX idx_position_id (position_id),
+    INDEX idx_status (status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='场次分配表';
+
+-- =============================================
+-- 19. 调度调整记录表
+-- =============================================
+DROP TABLE IF EXISTS schedule_adjustment;
+CREATE TABLE schedule_adjustment (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '调整ID',
+    project_id BIGINT NOT NULL COMMENT '所属项目ID',
+    plan_id BIGINT COMMENT '调度方案ID',
+    assignment_id BIGINT COMMENT '分配ID',
+    adjustment_type VARCHAR(50) NOT NULL COMMENT '调整类型：CANDIDATE_MOVE-考生移动，EXAMINER_REPLACE-考官替换，SESSION_ADJUST-场次调整，EMERGENCY-应急调整',
+    original_info TEXT COMMENT '原始信息（JSON格式）',
+    new_info TEXT COMMENT '新信息（JSON格式）',
+    reason VARCHAR(500) NOT NULL COMMENT '调整原因',
+    affected_count INT DEFAULT 0 COMMENT '影响人数',
+    operator_id BIGINT COMMENT '操作人ID',
+    operator_name VARCHAR(50) COMMENT '操作人姓名',
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    INDEX idx_project_id (project_id),
+    INDEX idx_plan_id (plan_id),
+    INDEX idx_adjustment_type (adjustment_type),
+    INDEX idx_create_time (create_time)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='调度调整记录表';
+
+-- =============================================
+-- 20. 考官负荷统计表
+-- =============================================
+DROP TABLE IF EXISTS examiner_workload;
+CREATE TABLE examiner_workload (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '统计ID',
+    project_id BIGINT NOT NULL COMMENT '所属项目ID',
+    examiner_id BIGINT NOT NULL COMMENT '考官ID',
+    plan_id BIGINT COMMENT '调度方案ID',
+    total_sessions INT DEFAULT 0 COMMENT '参与场次数',
+    total_candidates INT DEFAULT 0 COMMENT '评分考生数',
+    total_minutes INT DEFAULT 0 COMMENT '总工作时长（分钟）',
+    consecutive_count INT DEFAULT 0 COMMENT '连续场次数',
+    workload_score DECIMAL(5,2) DEFAULT 0.00 COMMENT '负荷评分',
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    UNIQUE KEY uk_examiner_plan (examiner_id, plan_id),
+    INDEX idx_project_id (project_id),
+    INDEX idx_examiner_id (examiner_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='考官负荷统计表';
+
 SET FOREIGN_KEY_CHECKS = 1;

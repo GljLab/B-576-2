@@ -176,6 +176,62 @@ const api = {
     create: (data) => request.post('/score-templates', data),
     update: (id, data) => request.put(`/score-templates/${id}`, data),
     delete: (id) => request.delete(`/score-templates/${id}`)
+  },
+
+  // 场次管理
+  sessions: {
+    list: (projectId) => request.get('/scheduling/sessions/list', { params: { projectId } }),
+    create: (data) => request.post('/scheduling/sessions/create', data),
+    update: (data) => request.put('/scheduling/sessions/update', data),
+    delete: (id) => request.delete('/scheduling/sessions/delete', { params: { id } }),
+    batchCreate: (projectId, sessions) => request.post('/scheduling/sessions/batch-create', sessions, { params: { projectId } }),
+    generateDefault: (projectId) => request.post('/scheduling/sessions/generate-default', null, { params: { projectId } })
+  },
+
+  // 考官可用性管理
+  availability: {
+    getProject: (projectId) => request.get('/scheduling/availability/project', { params: { projectId } }),
+    getExaminer: (examinerId, startDate, endDate) => request.get('/scheduling/availability/examiner', { params: { examinerId, startDate, endDate } }),
+    getMap: (projectId) => request.get('/scheduling/availability/map', { params: { projectId } }),
+    save: (data) => request.post('/scheduling/availability/save', data),
+    batchSave: (projectId, configs) => request.post('/scheduling/availability/batch-save', configs, { params: { projectId } }),
+    initDefault: (projectId) => request.post('/scheduling/availability/init-default', null, { params: { projectId } }),
+    checkConflict: (projectId, date, timeSlot) => request.get('/scheduling/availability/check-conflict', { params: { projectId, date, timeSlot } })
+  },
+
+  // 智能调度
+  scheduling: {
+    generate: (data) => request.post('/scheduling/generate', data),
+    generateWithStrategy: (data, strategy) => request.post('/scheduling/generate-with-strategy', data, { params: { strategy } }),
+    validateConstraints: (projectId) => request.get('/scheduling/validate-constraints', { params: { projectId } }),
+    listPlans: (projectId) => request.get('/scheduling/plans', { params: { projectId } }),
+    getExecutionPlan: (projectId) => request.get('/scheduling/execution-plan', { params: { projectId } }),
+    setExecution: (planId) => request.post('/scheduling/set-execution', null, { params: { planId } }),
+    getAssignments: (planId) => request.get('/scheduling/assignments', { params: { planId } }),
+    getAssignmentDetail: (assignmentId) => request.get('/scheduling/assignment-detail', { params: { assignmentId } }),
+    getAssignmentDetails: (planId) => request.get('/scheduling/assignment-details', { params: { planId } }),
+    compareStrategies: (projectId) => request.post('/scheduling/compare-strategies', null, { params: { projectId } }),
+    applyPlan: (planId) => request.post('/scheduling/apply', null, { params: { planId } }),
+    getPlanStatistics: (planId) => request.get('/scheduling/plan-statistics', { params: { planId } })
+  },
+
+  // 调度调整
+  adjustment: {
+    adjust: (data) => request.post('/scheduling/adjustment/adjust', data),
+    moveCandidates: (data) => request.post('/scheduling/adjustment/move-candidates', data),
+    replaceExaminer: (data) => request.post('/scheduling/adjustment/replace-examiner', data),
+    emergency: (data) => request.post('/scheduling/adjustment/emergency', data),
+    getHistory: (projectId, adjustmentType) => request.get('/scheduling/adjustment/history', { params: { projectId, adjustmentType } }),
+    revalidate: (planId) => request.post('/scheduling/adjustment/revalidate', null, { params: { planId } }),
+    getAffectedCount: (data) => request.post('/scheduling/adjustment/affected-count', data)
+  },
+
+  // 报表统计
+  report: {
+    getDashboard: (projectId) => request.get('/scheduling/report/dashboard', { params: { projectId } }),
+    generate: (projectId) => request.get('/scheduling/report/generate', { params: { projectId } }),
+    exportExcel: (projectId) => request.get('/scheduling/report/export', { params: { projectId }, responseType: 'blob' }),
+    comparePlans: (planId1, planId2) => request.get('/scheduling/report/compare-plans', { params: { planId1, planId2 } })
   }
 }
 

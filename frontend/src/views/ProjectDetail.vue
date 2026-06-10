@@ -24,6 +24,49 @@
     </div>
 
     <el-tabs v-model="activeTab" class="main-tabs">
+      <el-tab-pane label="场次编排" name="scheduling">
+        <div class="scheduling-entry">
+          <el-card class="scheduling-card">
+            <template #header>
+              <div class="card-header">
+                <span>智能面试场次编排与资源调度</span>
+                <el-button type="primary" @click="goToScheduling('sessions')">
+                  <el-icon><Calendar /></el-icon>进入编排
+                </el-button>
+              </div>
+            </template>
+            <div class="scheduling-description">
+              <p>支持多天多场次复杂面试项目编排，考虑考官可用性、考场资源、考生分组等多维度约束，自动生成最优调度方案。</p>
+              <el-row :gutter="20" class="quick-links">
+                <el-col :span="6">
+                  <div class="quick-link" @click="goToScheduling('sessions')">
+                    <el-icon :size="32" color="#409EFF"><Calendar /></el-icon>
+                    <span>场次配置</span>
+                  </div>
+                </el-col>
+                <el-col :span="6">
+                  <div class="quick-link" @click="goToScheduling('availability')">
+                    <el-icon :size="32" color="#67C23A"><Check /></el-icon>
+                    <span>考官可用性</span>
+                  </div>
+                </el-col>
+                <el-col :span="6">
+                  <div class="quick-link" @click="goToScheduling('plan')">
+                    <el-icon :size="32" color="#E6A23C"><MagicStick /></el-icon>
+                    <span>智能调度</span>
+                  </div>
+                </el-col>
+                <el-col :span="6">
+                  <div class="quick-link" @click="goToScheduling('dashboard')">
+                    <el-icon :size="32" color="#909399"><DataLine /></el-icon>
+                    <span>调度仪表盘</span>
+                  </div>
+                </el-col>
+              </el-row>
+            </div>
+          </el-card>
+        </div>
+      </el-tab-pane>
       <el-tab-pane label="项目概览" name="overview">
         <div class="overview-content">
           <div class="stat-cards" v-loading="loading">
@@ -327,6 +370,9 @@ import { ref, reactive, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import api from '@/api'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import {
+  Calendar, Check, MagicStick, DataLine
+} from '@element-plus/icons-vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -335,7 +381,11 @@ const projectId = ref(route.params.id)
 const loading = ref(false)
 const project = ref(null)
 const stats = ref({})
-const activeTab = ref('overview')
+const activeTab = ref('scheduling')
+
+const goToScheduling = (page) => {
+  router.push(`/scheduling/${projectId.value}/${page}`)
+}
 
 const scoreItems = ref([])
 const loadingItems = ref(false)
@@ -629,6 +679,51 @@ onMounted(() => {
 
 <style lang="scss" scoped>
 .project-detail {
+  .scheduling-entry {
+    padding: 20px 0;
+
+    .scheduling-card {
+      .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .scheduling-description {
+        p {
+          color: #606266;
+          line-height: 1.8;
+          margin: 0 0 20px 0;
+        }
+
+        .quick-links {
+          .quick-link {
+            text-align: center;
+            padding: 24px;
+            background: #f5f7fa;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+
+            &:hover {
+              background: #ecf5ff;
+              transform: translateY(-2px);
+              box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            }
+
+            span {
+              display: block;
+              margin-top: 12px;
+              font-size: 14px;
+              color: #303133;
+              font-weight: 500;
+            }
+          }
+        }
+      }
+    }
+  }
+
   .page-header {
     display: flex;
     justify-content: space-between;
